@@ -86,9 +86,27 @@ let books = [
 ]
 
 const typeDefs = /* GraphQL */ `
+  type Book {
+    id: ID!
+    title: String!
+    published: Int! 
+    author: String!
+    genres: [String!]!
+  }
+
+  type Author {
+    id: ID!
+    name: String!
+    born: Int!
+    bookCount: Int!
+  }
+
   type Query {
     bookCount: Int!
     authorCount: Int!
+
+    allBooks: [Book!]!
+    allAuthors: [Author!]!
   }
 `
 
@@ -96,7 +114,14 @@ const resolvers = {
   Query: {
     bookCount: () => books.length,
     authorCount: () => authors.length,
+
+    allBooks: () => books,
+    allAuthors: () => authors
   },
+
+  Author: {
+    bookCount: (root) => books.filter(b => root.name === b.author).length
+  }
 }
 
 const server = new ApolloServer({
