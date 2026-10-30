@@ -1,7 +1,7 @@
 const { ApolloServer } = require("@apollo/server")
 const { startStandaloneServer } = require("@apollo/server/standalone")
 const { v1: uuid } = require('uuid')
-const { GraphQLError } = require('graphql')
+const { GraphQLError, NoUnusedFragmentsRule } = require('graphql')
 
 let authors = [
   {
@@ -110,6 +110,7 @@ const typeDefs = /* GraphQL */ `
     allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
   }
+
   type Mutation {
     addBook (
       title: String!
@@ -117,6 +118,11 @@ const typeDefs = /* GraphQL */ `
       author: String!
       genres: [String!]!
     ) : Book
+
+    editAuthor (
+      name: String!
+      setBornTo: Int
+    ) : Author
   }
 `
 
@@ -169,6 +175,24 @@ const resolvers = {
 
       books = [...books, newBook]
       return newBook
+    },
+
+    editAuthor: (root, {name, setBornTo}) => {
+      const author = authors.find(a => a.name === name)
+
+      if (!author)
+        throw new GraphQLError(`author with name ${name} does not exists`, {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: name
+          }
+        })
+
+      // modify fields
+      if (setBornTo != null)
+        author.born = setBornTo
+
+      return author
     }
   },
 
