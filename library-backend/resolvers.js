@@ -47,7 +47,18 @@ const resolvers = {
         authorModel = new Author({
           name: author
         })
-        await authorModel.save()
+
+        // save author with verification
+        try {
+          await authorModel.save()
+        } catch (error) {
+          throw new GraphQLError(`error while save an author: ${error.message}`, {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              error
+            }
+          })
+        }
       }
 
       const newBook = new Book({
@@ -56,7 +67,17 @@ const resolvers = {
         author: authorModel._id,
         genres
       })
-      await newBook.save()
+      try {
+        await newBook.save()
+      } catch (error) {
+        throw new GraphQLError(`error while save a book: ${error.message}`, {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            error
+          }
+        })
+      }
+
       return await newBook.populate({
         path: 'author',
         populate: {
@@ -80,7 +101,16 @@ const resolvers = {
       if (setBornTo != null)
         author.born = setBornTo
 
-      await author.save()
+      try {
+        await author.save()
+      } catch (error) {
+        throw new GraphQLError(`error while save an author: ${error.message}`, {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            error
+          }
+        })
+      }
       return await author.populate('bookCount')
     }
   }
