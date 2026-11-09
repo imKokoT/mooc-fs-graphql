@@ -34,7 +34,7 @@ const typeDefs = /* GraphQL */ `
 
   type Query {
     # user management
-    me: User!
+    me: User
 
     # library
     bookCount: Int!

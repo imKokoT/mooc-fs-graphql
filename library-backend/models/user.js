@@ -10,7 +10,15 @@ const schema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 3
+  },
+
+  /*
+  // skipped due to material/tests requirements
+
+  password: {
+    type: String,
   }
+  */
 })
 
 module.exports = mongoose.model('User', schema)

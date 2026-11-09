@@ -1,10 +1,15 @@
 const { GraphQLError } = require('graphql')
+const jwt = require('jsonwebtoken')
+
 const Author = require('./models/author')
 const Book = require('./models/book')
+const User = require('./models/user')
 
 
 const resolvers = {
   Query: {
+    me: (root, args, context) => context.createUser,
+
     bookCount: async () => { return await Book.countDocuments() },
     authorCount: async () => { return await Author.countDocuments() },
 
@@ -31,7 +36,16 @@ const resolvers = {
   },
 
   Mutation: {
-    addBook: async (root, {title, published, author, genres}) => {
+
+    // === library logic ============================================
+
+    addBook: async (root, {title, published, author, genres}, { currentUser }) => {
+      if (!currentUser) {
+        throw new GraphQLError('not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        })
+      }
+
       // verify
       if (await Book.exists({title}))
         throw new GraphQLError(`title must be unique: ${title}`, {
@@ -86,7 +100,13 @@ const resolvers = {
       })
     },
 
-    editAuthor: async (root, {name, setBornTo}) => {
+    editAuthor: async (root, {name, setBornTo}, { currentUser }) => {
+      if (!currentUser) {
+        throw new GraphQLError('not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        })
+      }
+
       const author = await Author.findOne({name})
 
       if (!author)
@@ -112,8 +132,50 @@ const resolvers = {
         })
       }
       return await author.populate('bookCount')
-    }
-  }
+    },
+
+    // === user management ============================================
+  
+    /* 
+      after reviewing material and tests i found that
+      it is not required to create real login/sing-up system.
+      
+      so i have to skip this for now, but how it is painful to look
+      at this parody of the user management system...
+    */
+    createUser: async (root, {username, favoriteGenre}) => {
+      const user = new User({ username, favoriteGenre })
+  
+      return user.save()
+        .catch(error => {
+          throw new GraphQLError(`Creating the user failed: ${error.message}`, {
+            extensions: {
+              code: 'BAD_USER_INPUT',
+              invalidArgs: username,
+              error
+            }
+          })
+        })
+    },
+    login: async (root, {username, password}) => {
+      const user = await User.findOne({ username })
+  
+      if ( !user || password !== 'secret' ) {
+        throw new GraphQLError('wrong credentials', {
+          extensions: {
+            code: 'BAD_USER_INPUT'
+          }
+        })        
+      }
+  
+      const userForToken = {
+        username: user.username,
+        id: user._id,
+      }
+  
+      return { value: jwt.sign(userForToken, process.env.JWT_SECRET) }
+    },
+  },
 }
 
 module.exports = resolvers
