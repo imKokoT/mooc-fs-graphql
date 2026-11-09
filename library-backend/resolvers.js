@@ -8,7 +8,7 @@ const User = require('./models/user')
 
 const resolvers = {
   Query: {
-    me: (root, args, context) => context.createUser,
+    me: (root, args, context) => context.currentUser,
 
     bookCount: async () => { return await Book.countDocuments() },
     authorCount: async () => { return await Author.countDocuments() },
@@ -21,7 +21,7 @@ const resolvers = {
         filter.author = author._id
       }
       if (args.genre)
-        filter = {...filter, genres: [args.genre]}
+        filter = {...filter, genres: args.genre}
 
       return await Book.find(filter).populate({
         path: 'author',
@@ -110,12 +110,7 @@ const resolvers = {
       const author = await Author.findOne({name})
 
       if (!author)
-        throw new GraphQLError(`author with name ${name} does not exists`, {
-          extensions: {
-            code: 'BAD_USER_INPUT',
-            invalidArgs: name
-          }
-        })
+        return null
 
       // modify fields
       if (setBornTo != null)
@@ -174,6 +169,17 @@ const resolvers = {
       }
   
       return { value: jwt.sign(userForToken, process.env.JWT_SECRET) }
+    },
+  
+    // === tests ================================================
+    _resetDatabase: async () => {
+      if (process.env.NODE_ENV !== 'test') {
+        throw new GraphQLError('_resetDatabase is only available in test mode')
+      }
+      await Author.deleteMany({})
+      await Book.deleteMany({})
+      await User.deleteMany({})
+      return true
     },
   },
 }

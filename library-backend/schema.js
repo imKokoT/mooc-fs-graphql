@@ -68,6 +68,9 @@ const typeDefs = /* GraphQL */ `
       name: String!
       setBornTo: Int
     ) : Author
+
+    # tests
+    _resetDatabase: Boolean
   }
 `
 
