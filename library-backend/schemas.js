@@ -1,5 +1,20 @@
 
 const typeDefs = /* GraphQL */ `
+
+  # === user management ===
+
+  type User {
+    id: ID!
+    username: String!
+    favoriteGenre: String!
+  }
+
+  type Token {
+    value: String!
+  }
+
+  # === library ===
+  
   type Book {
     id: ID!
     title: String!
@@ -15,7 +30,13 @@ const typeDefs = /* GraphQL */ `
     bookCount: Int!
   }
 
+  # === base ===
+
   type Query {
+    # user management
+    me: User!
+
+    # library
     bookCount: Int!
     authorCount: Int!
 
@@ -24,6 +45,18 @@ const typeDefs = /* GraphQL */ `
   }
 
   type Mutation {
+    # user management
+    createUser(
+      username: String!
+      favoriteGenre: String!
+    ): User
+
+    login(
+      username: String!
+      password: String!
+    ): Token
+
+    # library
     addBook (
       title: String!
       published: Int! 
