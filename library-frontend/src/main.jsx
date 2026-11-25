@@ -7,7 +7,7 @@ import { ApolloProvider } from '@apollo/client/react'
 import { SetContextLink } from '@apollo/client/link/context'
 
 const authLink  = new SetContextLink(({ headers }) => {
-  const token = localStorage.getItem('phonebook-user-token')
+  const token = localStorage.getItem('library-user-token')
   return {
     headers: {
       ...headers,
